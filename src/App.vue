@@ -1,30 +1,35 @@
 <template>
-  <div id="nav">
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </div>
-  <router-view/>
+    <div>
+    <!-- 使用A模块的state -->
+    <p>{{$store.state.moduleA.username}}</p>
+    <!-- 使用A模块的getter -->
+    <p>{{$store.getters.newName}}</p>
+    <!-- 使用B模块的state -->
+    <p>{{$store.state.moduleB.username}}</p>
+    <!-- 使用B模块的getter(其他类似)  带命名空间,需要中括号 -->
+    <p>{{$store.getters['moduleB/newName']}}</p>
+    <button @click="mutationsFn">mutations</button>
+    <button @click="actionFn">action</button>
+    </div>
 </template>
 
-<style lang="less">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
+<script>
+import { useStore } from 'vuex'
 
-#nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
+export default {
+  name: 'App',
+  setup(props) {
+    const store = useStore()
+    const actionFn = () => {
+      store.dispatch('moduleB/updateName')
     }
+    const mutationsFn = () => {
+      store.commit('moduleB/updateName')
+    }
+    return { actionFn, mutationsFn }
   }
 }
+</script>
+
+<style lang="scss" scoped>
 </style>
