@@ -1,3 +1,6 @@
+// less混入就是申明一段css(选择器包裹)的代码或者函数；在其他css选择器调用，可复用的包裹的代码
+// 完成自动注入公用变量和混入,问题：每次使用共用的比那辆和mixin的时候需要d
+// 解决办法：使用vuecli的style-resources-loader插件完成自动注入到每个less文件或者vue组件中style标签中
 // 鼠标经过上移阴影动画
 .hoverShadow () {
     transition: all .5s;
@@ -7,3 +10,18 @@
         box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
     }
 }
+
+//演示混入
+// 可以复用代码
+/*
+.hunru {
+    width: 100px;
+    height: 100px;
+}
+
+.box {
+    // width: 100px;
+    // height: 100px;
+    .hunru()
+}
+*/
