@@ -1,14 +1,4 @@
 <template>
-  <div class="container">
-    App
-  </div>
+  <!-- 一级路由 -->
+  <RouterView />
 </template>
-<script>
-export default {
-  name: 'App',
-  setup() {
-    return {}
-  }
-}
-
-</script>
