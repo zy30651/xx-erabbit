@@ -5,12 +5,12 @@ export default {
         return {
             // 用户信息
             profile: {
-                id: '',
+                id: '1',
                 avatar: '',
-                nickname: '',
-                account: '',
-                mobile: '',
-                token: ''
+                nickname: 'zs',
+                account: '22',
+                mobile: '17701314156',
+                token: 'asdf'
             }
         }
     },

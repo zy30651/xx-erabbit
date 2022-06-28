@@ -1,21 +1,29 @@
 <template>
     <!-- 顶部导航栏 -->
-    <nav>顶部通栏</nav>
+    <AppNavBar />
     <!-- 头部组件 -->
+    <AppHeader />
 
-    <header>头部组件</header>
     <!-- 内容容器 -->
     <div class='main'>
         <!-- 二级路由 -->
         <RouterView></RouterView>
     </div>
     <!-- 底部组件 -->
-    <footer>底部组件</footer>
+    <AppFooter />
 </template>
 
 <script>
+import AppNavBar from '@/components/app-topnav'
+import AppHeader from '@/components/app-header'
+import AppFooter from '@/components/app-footer'
 export default {
-    name: 'Layout'
+    name: 'Layout',
+    components: {
+        AppNavBar,
+        AppHeader,
+        AppFooter
+    }
 }
 </script>
 
