@@ -1,21 +1,25 @@
 <template>
     <!-- 顶部导航栏 -->
-    <nav>顶部通栏</nav>
-    <!-- 头部组件 -->
+    <AppTopnav />
 
-    <header>头部组件</header>
+    <!-- 头部组件 -->
+    <AppHeader />
     <!-- 内容容器 -->
     <div class='main'>
         <!-- 二级路由 -->
         <RouterView></RouterView>
     </div>
     <!-- 底部组件 -->
-    <footer>底部组件</footer>
+    <AppFooter />
 </template>
 
 <script>
+import AppTopnav from '@/components/app-topnav'
+import AppHeader from '@/components/app-header'
+import AppFooter from '@/components/app-footer'
 export default {
-    name: 'Layout'
+    name: 'XtxLayout',
+    components: { AppTopnav, AppHeader, AppFooter }
 }
 </script>
 
