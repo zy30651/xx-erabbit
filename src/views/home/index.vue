@@ -1,12 +1,16 @@
 <template>
     <div class="container">
-        Home
+        <homeCategory></homeCategory>
     </div>
 </template>
 
 <script>
+import homeCategory from './components/home-category.vue'
 export default {
-    name: 'HomePage'
+    name: 'HomePage',
+    components: {
+        homeCategory
+    }
 }
 </script>
 
