@@ -20,14 +20,14 @@
 </template>
 
 <script>
-import homePanel from './home-panel.vue'
+import HomePanel from './home-panel.vue'
 import homeSkeleton from './home-skeleton.vue'
 import { findHot } from '@/api/home'
 import { useLazyData } from '@/hooks'
 export default {
   name: 'HomeNew',
   components: {
-    homePanel,
+    HomePanel,
     homeSkeleton,
   },
   setup() {
