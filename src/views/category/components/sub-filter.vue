@@ -20,7 +20,6 @@
         <a
           @click="changeProp(item, prop.id)"
           :class="{ active: prop.id === item.selectedProp }"
-          class="ellipsis"
           href="javascript:;"
           v-for="prop in item.properties"
           :key="prop.id"
@@ -128,7 +127,6 @@ export default {
         margin-right: 36px;
         transition: all 0.3s;
         display: inline-block;
-        max-width: 112px;
         &.active,
         &:hover {
           color: @xtxColor;

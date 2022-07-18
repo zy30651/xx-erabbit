@@ -5,6 +5,7 @@ import SubCategory from '@/views/category/sub.vue'
 // 懒加载
 const Layout = () => import('@/views/Layout.vue')
 const Home = () => import('@/views/home/index.vue')
+const Goods = () => import('@/views/goods/index.vue')
 
 const routes = [
   // 一级路由布局容器
@@ -15,6 +16,7 @@ const routes = [
       { path: '/', component: Home },
       { path: '/category/:id', component: TopCategory },
       { path: '/category/sub/:id', component: SubCategory },
+      { path: '/product/:id', component: Goods },
     ],
   },
 ]

@@ -23,5 +23,5 @@ export const findSubCategoryFilter = (id) => {
  * @param {Object} params - 可参考接口文档
  */
 export const findSubCategoryGoods = (params) => {
-  return request('/category/goods/temporary', 'post', params)
+  return request('/category/goods', 'post', params)
 }
