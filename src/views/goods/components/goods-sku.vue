@@ -96,10 +96,6 @@ export default {
       type: Object,
       default: () => ({ specs: [], skus: [] }),
     },
-    skuId: {
-      type: String,
-      default: '',
-    },
   },
   setup(props, { emit }) {
     const pathMap = getPathMap(props.goods.skus)

@@ -20,9 +20,11 @@
         </div>
         <div class="spec">
           <GoodsName :goods="goods" />
-          <GoodsSku :goods="goods" :skuId="goods.skus[0].id" @change="changeSku" />
+          <GoodsSku :goods="goods" @change="changeSku" />
           <XtxNumbox label="数量" v-model="num" :max="goods.inventory" />
-          <XtxButton type="primary" style="margin-top: 20px">加入购物车</XtxButton>
+          <XtxButton type="primary" style="margin-top: 20px" @click="insertCart()">
+            加入购物车
+          </XtxButton>
         </div>
       </div>
       <!-- 推荐商品 -->
@@ -61,6 +63,8 @@ import GoodsName from './components/goods-name.vue'
 import GoodsSku from './components/goods-sku.vue'
 import GoodsTabs from './components/goods-tabs'
 import GoodsHot from './components/goods-hot'
+import Message from '@/components/library/Message'
+import { useStore } from 'vuex'
 export default {
   name: 'XtxGoodsPage',
   components: {
@@ -81,12 +85,46 @@ export default {
         goods.value.price = sku.price
         goods.value.oldPrice = sku.oldPrice
         goods.value.inventory = sku.inventory
+
+        currSku.value = sku
+      } else {
+        currSku.value = null
       }
     }
     // 提供goods数据给后代组件使用
     provide('goods', goods)
     const num = ref(1)
-    return { goods, changeSku, num }
+
+    // 加入购物车逻辑
+    const currSku = ref(null)
+    const store = useStore()
+    const insertCart = () => {
+      console.log(currSku.value)
+      if (currSku.value && currSku.value.skuId) {
+        const { skuId, specsText: attrsText, inventory: stock } = currSku.value
+        const { id, name, price, mainPictures } = goods.value
+        store
+          .dispatch('cart/insertCart', {
+            skuId,
+            attrsText,
+            stock,
+            id,
+            name,
+            price,
+            nowPrice: price,
+            picture: mainPictures[0],
+            selected: true,
+            isEffective: true,
+            count: num.value,
+          })
+          .then(() => {
+            Message({ type: 'success', text: '加入购物车成功' })
+          })
+      } else {
+        Message({ text: '请选择完整规格' })
+      }
+    }
+    return { goods, changeSku, num, insertCart }
   },
 }
 const useGoods = () => {
