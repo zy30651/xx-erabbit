@@ -91,6 +91,21 @@ export default {
   //   异步操作，调用接口信息
   //   调用方式，1：使用mapActions 2：使用dispatch
   actions: {
+    // 批量删除选中商品
+    batchDeleteCart(ctx, isClear) {
+      return new Promise((resolve, reject) => {
+        if (ctx.rootState.user.profile.token) {
+          // 登录 TODO
+        } else {
+          // 本地
+          // 1. 获取选中商品列表，进行遍历调用deleteCart mutataions函数
+          ctx.getters[isClear ? 'invalidList' : 'selectedList'].forEach((item) => {
+            ctx.commit('deleteCart', item.skuId)
+          })
+          resolve()
+        }
+      })
+    },
     insertCart(ctx, goods) {
       return new Promise((resolve, reject) => {
         if (ctx.rootState.user.profile.token) {
@@ -98,6 +113,19 @@ export default {
         } else {
           // 未登录
           ctx.commit('insertCart', goods)
+          resolve()
+        }
+      })
+    },
+    checkAllCart(ctx, selected) {
+      return new Promise((resolve, reject) => {
+        if (ctx.rootState.user.profile.token) {
+          // 已登陆
+        } else {
+          // 未登录
+          ctx.getters.validList.forEach((item) => {
+            ctx.commit('updateCart', { skuId: item.skuId, selected })
+          })
           resolve()
         }
       })

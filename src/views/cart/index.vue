@@ -10,7 +10,9 @@
           <thead>
             <tr>
               <th width="120">
-                <XtxCheckbox :modelValue="$store.getters['cart/isCheckAll']">全选</XtxCheckbox>
+                <XtxCheckbox @change="checkAll" :modelValue="$store.getters['cart/isCheckAll']">
+                  全选
+                </XtxCheckbox>
               </th>
               <th width="400">商品信息</th>
               <th width="220">单价</th>
@@ -21,7 +23,12 @@
           </thead>
           <!-- 有效商品 -->
           <tbody>
-            <tr v-for="i in $store.getters['cart/validList']" :key="item.skuId">
+            <tr v-if="$store.getters['cart/validList'].length === 0">
+              <td colspan="6">
+                <CartNone />
+              </td>
+            </tr>
+            <tr v-for="item in $store.getters['cart/validList']" :key="item.skuId">
               <td>
                 <XtxCheckbox
                   :modelValue="item.selected"
@@ -55,7 +62,9 @@
               </td>
               <td class="tc">
                 <p><a href="javascript:;">移入收藏夹</a></p>
-                <p><a class="green" href="javascript:;">删除</a></p>
+                <p>
+                  <a class="green" href="javascript:;" @click="deleteCart(goods.skuId)">删除</a>
+                </p>
                 <p><a href="javascript:;">找相似</a></p>
               </td>
             </tr>
@@ -86,7 +95,7 @@
                 <p>&yen;{{ (item.nowPrice * 100 * item.count) / 100 }}</p>
               </td>
               <td class="tc">
-                <p><a class="green" href="javascript:;">删除</a></p>
+                <p><a class="green" @click="deleteCart(item.skuId)" href="javascript:;">删除</a></p>
                 <p><a href="javascript:;">找相似</a></p>
               </td>
             </tr>
@@ -97,9 +106,9 @@
       <div class="action">
         <div class="batch">
           <XtxCheckbox :modelValue="$store.getters['cart/isCheckAll']">全选</XtxCheckbox>
-          <a href="javascript:;">删除商品</a>
+          <a @click="batchDeleteCart()" href="javascript:;">删除商品</a>
           <a href="javascript:;">移入收藏夹</a>
-          <a href="javascript:;">清空失效商品</a>
+          <a @click="batchDeleteCart(true)" href="javascript:;">清空失效商品</a>
         </div>
         <div class="total">
           共 {{ $store.getters['cart/validTotal'] }} 件商品，已选择
@@ -114,16 +123,37 @@
   </div>
 </template>
 <script>
+import CartNone from './components/cart-none'
 import store from '@/store'
 import GoodRelevant from '@/views/goods/components/goods-relevant'
 export default {
   name: 'XtxCartPage',
-  components: { GoodRelevant },
+  components: { GoodRelevant, CartNone },
   setup(props) {
     const checkOne = (skuId, selected) => {
       store.dispatch('cart/updateCart', { skuId, selected })
     }
-    return { checkOne }
+    const checkAll = (selected) => {
+      store.dispatch('cart/checkAllCart', selected)
+    }
+    const deleteCart = (skuId) => {
+      Confirm({ text: '您确定从购物车删除该商品吗？' })
+        .then(() => {
+          store.dispatch('cart/deleteCart', skuId)
+        })
+        .catch((e) => {
+          console.log('点击取消')
+        })
+    }
+    // 批量删除
+    const batchDeleteCart = (isClear) => {
+      Confirm({ text: `您确定从购物车删除${isClear ? '失效' : '选中'}商品吗?` })
+        .then(() => {
+          store.dispatch('cart/batchDeleteCart', isClear)
+        })
+        .catch((e) => {})
+    }
+    return { checkOne, checkAll, deleteCart, batchDeleteCart }
   },
 }
 </script>
