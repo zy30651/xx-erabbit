@@ -2,7 +2,7 @@
 // 本地：id skuId name picture price nowPrice count attrsText selected stock isEffective
 // 线上：比上面多 isCollect 有用 discount 无用 两项项信息
 
-import { getNewCartGoods } from '@/api/cart'
+import { getNewCartGoods, deleteCart, insertCart, findCart } from '@/api/cart'
 
 export default {
   namespaced: true,
@@ -149,6 +149,42 @@ export default {
         } else {
           // 本地
           ctx.commit('updateCart', goods)
+          resolve()
+        }
+      })
+    },
+    // 修改规格
+    updateCartSku(ctx, { oldSkuId, newSku }) {
+      return new Promise((resolve, reject) => {
+        if (ctx.rootState.user.profile.token) {
+          // 已登录
+          // 1. 找出旧的商品信息
+          // 2. 删除旧商品数据
+          // 3. 原先商品的数量+新skuId
+          // 4. 添加新的商品
+          const oldGoods = ctx.state.list.find((item) => item.skuId === oldSkuId)
+          deleteCart([oldGoods.skuId])
+            .then(() => {
+              return insertCart({ skuId: newSku.skuId, count: oldGoods.count })
+            })
+            .then(() => {
+              return findCart()
+            })
+            .then((data) => {
+              ctx.commit('setCart', data.result)
+              resolve()
+            })
+        } else {
+          // 未登录
+          // 1. 找出旧的商品信息
+          // 2. 删除旧商品数据
+          // 3. 根据新的sku信息和旧的商品信息，合并成一条新的购物车商品数据
+          // 4. 添加新的商品
+          const oldGoods = ctx.state.list.find((item) => item.skuId === oldSkuId)
+          ctx.commit('deleteCart', oldSkuId)
+          const { skuId, price: nowPrice, specsText: attrsText, inventory: stock } = newSku
+          const newGoods = { ...oldGoods, skuId, nowPrice, attrsText, stock }
+          ctx.commit('insertCart', newGoods)
           resolve()
         }
       })

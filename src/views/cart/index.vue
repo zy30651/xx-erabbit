@@ -1,10 +1,10 @@
 <template>
   <div class="xtx-cart-page">
     <div class="container">
-      <XtxBread>
+      <xtxBread>
         <XtxBreadItem to="/">首页</XtxBreadItem>
-        <XtxBreadItem>购物车</XtxBreadItem>
-      </XtxBread>
+        <XtxBreadItem to="/">购物车</XtxBreadItem>
+      </xtxBread>
       <div class="cart">
         <table>
           <thead>
@@ -43,7 +43,12 @@
                   <div>
                     <p class="name ellipsis">{{ item.name }}</p>
                     <!-- 选择规格组件 -->
-                    <p class="attr">{{ item.attrsText }}</p>
+                    <CartSku
+                      @change="($event) => updateCartSku(item.skuId, $event)"
+                      :attrsText="item.attrsText"
+                      :skuId="item.skuId"
+                    />
+                    <!-- <p class="attr">{{ item.attrsText }}</p> -->
                   </div>
                 </div>
               </td>
@@ -55,7 +60,11 @@
                 </p>
               </td>
               <td class="tc">
-                <XtxNumbox :modelValue="item.count" />
+                <XtxNumbox
+                  :modelValue="item.count"
+                  :max="item.stock"
+                  @change="($event) => updateCount(item.skuId, $event)"
+                />
               </td>
               <td class="tc">
                 <p class="f16 red">&yen;{{ (item.nowPrice * 100 * item.count) / 100 }}</p>
@@ -63,7 +72,7 @@
               <td class="tc">
                 <p><a href="javascript:;">移入收藏夹</a></p>
                 <p>
-                  <a class="green" href="javascript:;" @click="deleteCart(goods.skuId)">删除</a>
+                  <a class="green" href="javascript:;" @click="deleteCart(item.skuId)">删除</a>
                 </p>
                 <p><a href="javascript:;">找相似</a></p>
               </td>
@@ -123,12 +132,14 @@
   </div>
 </template>
 <script>
+import CartSku from './components/cart-sku'
 import CartNone from './components/cart-none'
+import Confirm from '@/components/library/Confirm'
 import store from '@/store'
 import GoodRelevant from '@/views/goods/components/goods-relevant'
 export default {
   name: 'XtxCartPage',
-  components: { GoodRelevant, CartNone },
+  components: { GoodRelevant, CartNone, CartSku },
   setup(props) {
     const checkOne = (skuId, selected) => {
       store.dispatch('cart/updateCart', { skuId, selected })
@@ -145,6 +156,9 @@ export default {
           console.log('点击取消')
         })
     }
+    const updateCount = (skuId, count) => {
+      store.dispatch('cart/updateCart', { skuId, count })
+    }
     // 批量删除
     const batchDeleteCart = (isClear) => {
       Confirm({ text: `您确定从购物车删除${isClear ? '失效' : '选中'}商品吗?` })
@@ -153,7 +167,11 @@ export default {
         })
         .catch((e) => {})
     }
-    return { checkOne, checkAll, deleteCart, batchDeleteCart }
+    // 修改规格
+    const updateCartSku = (oldSkuId, newSku) => {
+      store.dispatch('cart/updateCartSku', { oldSkuId, newSku })
+    }
+    return { checkOne, checkAll, deleteCart, batchDeleteCart, updateCount, updateCartSku }
   },
 }
 </script>
