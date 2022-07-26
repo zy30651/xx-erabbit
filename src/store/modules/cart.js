@@ -2,7 +2,15 @@
 // 本地：id skuId name picture price nowPrice count attrsText selected stock isEffective
 // 线上：比上面多 isCollect 有用 discount 无用 两项项信息
 
-import { getNewCartGoods, deleteCart, insertCart, findCart } from '@/api/cart'
+import {
+  mergeLocalCart,
+  updateCart,
+  getNewCartGoods,
+  deleteCart,
+  insertCart,
+  findCartList,
+  checkAllCart,
+} from '@/api/cart'
 
 export default {
   namespaced: true,
@@ -52,6 +60,10 @@ export default {
   //   对象，存放改变state的初始值的方法，为同步操作
   //   调用方式， 1：使用mapMutations 2：commit
   mutations: {
+    // 设置购物车列表
+    setCartList(state, list) {
+      state.list = list
+    },
     // 加入购物车
     insertCart(state, payload) {
       // 约定加入购物车字段必须和后端保持一致 payload对象 的字段
@@ -96,6 +108,17 @@ export default {
       return new Promise((resolve, reject) => {
         if (ctx.rootState.user.profile.token) {
           // 登录 TODO
+          const ids = ctx.getters[isClear ? 'invalidList' : 'selectedList'].map(
+            (item) => item.skuId
+          )
+          deleteCart(ids)
+            .then(() => {
+              return findCartList()
+            })
+            .then((data) => {
+              ctx.commit('setCartList', data.result)
+              resolve()
+            })
         } else {
           // 本地
           // 1. 获取选中商品列表，进行遍历调用deleteCart mutataions函数
@@ -110,6 +133,14 @@ export default {
       return new Promise((resolve, reject) => {
         if (ctx.rootState.user.profile.token) {
           // 已登陆
+          insertCart(goods)
+            .then(() => {
+              return findCartList()
+            })
+            .then((data) => {
+              ctx.commit('setCartList', data.result)
+              resolve()
+            })
         } else {
           // 未登录
           ctx.commit('insertCart', goods)
@@ -121,6 +152,15 @@ export default {
       return new Promise((resolve, reject) => {
         if (ctx.rootState.user.profile.token) {
           // 已登陆
+          const ids = ctx.getters.validList.map((item) => item.skuId)
+          checkAllCart({ selected, ids })
+            .then(() => {
+              return findCartList()
+            })
+            .then((data) => {
+              ctx.commit('setCartList', data.result)
+              resolve()
+            })
         } else {
           // 未登录
           ctx.getters.validList.forEach((item) => {
@@ -134,6 +174,14 @@ export default {
       return new Promise((resolve, reject) => {
         if (ctx.rootState.user.profile.token) {
           // 登陆 ToDo
+          deleteCart([skuId])
+            .then(() => {
+              return findCartList()
+            })
+            .then((data) => {
+              ctx.commit('setCartList', data.result)
+              resolve()
+            })
         } else {
           ctx.commit('deleteCart', skuId)
           resolve()
@@ -146,6 +194,14 @@ export default {
       return new Promise((resolve, reject) => {
         if (ctx.rootState.user.profile.token) {
           // 登录 TODO
+          updateCart(goods)
+            .then(() => {
+              return findCartList()
+            })
+            .then((data) => {
+              ctx.commit('setCartList', data.result)
+              resolve()
+            })
         } else {
           // 本地
           ctx.commit('updateCart', goods)
@@ -171,7 +227,7 @@ export default {
               return findCart()
             })
             .then((data) => {
-              ctx.commit('setCart', data.result)
+              ctx.commit('setCartList', data.result)
               resolve()
             })
         } else {
@@ -194,6 +250,10 @@ export default {
       return new Promise((resolve, reject) => {
         if (ctx.rootState.user.profile.token) {
           // 登陆 ToDo
+          findCartList().then((data) => {
+            ctx.commit('setCartList', data.result)
+            resolve()
+          })
         } else {
           // 本地
           // Promise.all()可以并列发送多个请求，请求都成功调用then
@@ -214,6 +274,16 @@ export default {
             })
         }
       })
+    },
+    //  合并本地购物车
+    async mergeLocalCart(ctx) {
+      // 存储token后调用合并API接口函数进行购物合并
+      const cartList = ctx.getters.validList.map(({ skuId, selected, count }) => {
+        return { skuId, selected, count }
+      })
+      await mergeLocalCart(cartList)
+      // 合并成功将本地购物车删除
+      ctx.commit('setCartList', [])
     },
   },
 }

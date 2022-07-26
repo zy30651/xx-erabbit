@@ -7,11 +7,11 @@
   </section>
   <section class="container" v-else>
     <nav class="tab">
-      <a @click="hasAccount=true" :class="{active:hasAccount}" href="javascript:;">
+      <a @click="hasAccount = true" :class="{ active: hasAccount }" href="javascript:;">
         <i class="iconfont icon-bind" />
         <span>已有小兔鲜账号，请绑定手机</span>
       </a>
-      <a @click="hasAccount=false" :class="{active:!hasAccount}" href="javascript:;">
+      <a @click="hasAccount = false" :class="{ active: !hasAccount }" href="javascript:;">
         <i class="iconfont icon-edit" />
         <span>没有小兔鲜账号，请完善资料</span>
       </a>
@@ -39,7 +39,7 @@ import Message from '@/components/library/Message'
 export default {
   name: 'LoginCallback',
   components: { LoginHeader, LoginFooter, CallbackBind, CallbackPatch },
-  setup () {
+  setup() {
     const hasAccount = ref(true)
 
     // 首先：默认认为已经注册且已经绑定
@@ -56,26 +56,28 @@ export default {
       QC.Login.getMe((openId) => {
         unionId.value = openId
         // 请求小兔鲜后台，做QQ登录
-        userQQLogin(openId).then(data => {
-          // 登录成功：data.result 用户信息
-          // 1. 存储用户信息
-          const { id, account, avatar, mobile, nickname, token } = data.result
-          store.commit('user/setUser', { id, account, avatar, mobile, nickname, token })
-          store.dispatch('cart/mergeCart').then(() => {
-          // 2. 跳转到来源页或者首页
-            router.push(store.state.user.redirectUrl)
-            // 3. 成功提示
-            Message({ type: 'success', text: 'QQ登录成功' })
+        userQQLogin(openId)
+          .then((data) => {
+            // 登录成功：data.result 用户信息
+            // 1. 存储用户信息
+            const { id, account, avatar, mobile, nickname, token } = data.result
+            store.commit('user/setUser', { id, account, avatar, mobile, nickname, token })
+            store.dispatch('cart/mergeLocalCart').then(() => {
+              // 2. 跳转到来源页或者首页
+              router.push(store.state.user.redirectUrl)
+              // 3. 成功提示
+              Message({ type: 'success', text: 'QQ登录成功' })
+            })
           })
-        }).catch(e => {
-          // 登录失败：没有和小兔鲜绑定
-          isBind.value = false
-        })
+          .catch((e) => {
+            // 登录失败：没有和小兔鲜绑定
+            isBind.value = false
+          })
       })
     }
 
     return { hasAccount, isBind, unionId }
-  }
+  },
 }
 </script>
 <style scoped lang="less">

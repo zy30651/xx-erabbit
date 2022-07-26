@@ -1,5 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-
+import store from '@/store'
 import TopCategory from '@/views/category'
 import SubCategory from '@/views/category/sub.vue'
 // 懒加载
@@ -36,4 +36,13 @@ const router = createRouter({
   },
 })
 
+router.beforeEach((to, from, next) => {
+  // 用户信息
+  const { token } = store.state.user.profile
+  // 跳转去member开头的地址 缺没有登录
+  if (to.path.startsWith('/member') && !token) {
+    next({ path: '/login', query: { redirectUrl: to.fullPath } })
+  }
+  next()
+})
 export default router
