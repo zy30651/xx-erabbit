@@ -224,7 +224,7 @@ export default {
               return insertCart({ skuId: newSku.skuId, count: oldGoods.count })
             })
             .then(() => {
-              return findCart()
+              return findCartList()
             })
             .then((data) => {
               ctx.commit('setCartList', data.result)

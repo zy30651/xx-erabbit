@@ -137,6 +137,7 @@ import CartSku from './components/cart-sku'
 import CartNone from './components/cart-none'
 import Confirm from '@/components/library/Confirm'
 import store from '@/store'
+import { useRouter } from 'vue-router'
 import GoodRelevant from '@/views/goods/components/goods-relevant'
 export default {
   name: 'XtxCartPage',
