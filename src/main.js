@@ -10,4 +10,6 @@ import '@/assets/styles/common.less'
 import ui from './components/library'
 // 插件的使用，在main.js使用app.use插件
 
+import './mock'
+
 createApp(App).use(store).use(router).use(ui).mount('#app')
