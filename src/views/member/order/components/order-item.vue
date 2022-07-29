@@ -3,17 +3,15 @@
     <div class="head">
       <span>下单时间：{{ order.createTime }}</span>
       <span>订单编号：{{ order.id }}</span>
-      <!-- 未付款，倒计时时间还有 -->
       <span class="down-time" v-if="order.orderState === 1">
         <i class="iconfont icon-down-time"></i>
-        <b>付款截止：{{ countdownText }}</b>
+        <b>付款截止：{{ timeText }}</b>
       </span>
-      <!-- 已完成 已取消 -->
       <a
         @click="$emit('on-delete', order)"
-        v-if="[5, 6].includes(order.orederState)"
         href="javascript:;"
         class="del"
+        v-if="[5, 6].includes(order.orderState)"
       >
         删除
       </a>
@@ -22,9 +20,9 @@
       <div class="column goods">
         <ul>
           <li v-for="goods in order.skus" :key="goods.id">
-            <a class="image" href="javascript:;">
+            <RouterLink class="image" :to="`/product/${goods.spuId}`">
               <img :src="goods.image" alt="" />
-            </a>
+            </RouterLink>
             <div class="info">
               <p class="name ellipsis-2">{{ goods.name }}</p>
               <p class="attr ellipsis">{{ goods.attrsText }}</p>
@@ -36,14 +34,14 @@
       </div>
       <div class="column state">
         <p>{{ orderStatus[order.orderState].label }}</p>
-        <!-- 待收货：查看物流 -->
-        <!-- 待评价：评价商品 -->
-        <!-- 已完成：查看评价 -->
+        <!-- 待收货  查看物流 -->
+        <!-- 待评价  评价商品 -->
+        <!-- 已完成  查看评价 -->
         <p @click="$emit('on-logistics', order)" v-if="order.orderState === 3">
-          <a href="javascript:;" class="green">查看物流</a>
+          <a class="green" href="javascript:;">查看物流</a>
         </p>
-        <p v-if="order.orderState === 4"><a href="javascript:;" class="green">评价商品</a></p>
-        <p v-if="order.orderState === 5"><a href="javascript:;" class="green">查看评价</a></p>
+        <p v-if="order.orderState === 4"><a class="green" href="javascript:;">评价商品</a></p>
+        <p v-if="order.orderState === 5"><a class="green" href="javascript:;">查看评价</a></p>
       </div>
       <div class="column amount">
         <p class="red">¥{{ order.payMoney }}</p>
@@ -76,10 +74,15 @@
         <p>
           <a @click="$router.push(`/member/order/${order.id}`)" href="javascript:;">查看详情</a>
         </p>
-        <p @click="$emit('on-cancel')" v-if="order.orderState === 1">
+        <p @click="$emit('on-cancel', order)" v-if="order.orderState === 1">
           <a href="javascript:;">取消订单</a>
         </p>
-        <p v-if="[2, 3, 4, 5].includes(order.orderState)"><a href="javascript:;">再次购买</a></p>
+        <p
+          @click="$router.push(`/member/checkout?orderId=${order.id}`)"
+          v-if="[2, 3, 4, 5].includes(order.orderState)"
+        >
+          <a href="javascript:;">再次购买</a>
+        </p>
         <p v-if="[4, 5].includes(order.orderState)"><a href="javascript:;">申请售后</a></p>
       </div>
     </div>
@@ -87,7 +90,6 @@
 </template>
 <script>
 import { orderStatus } from '@/api/constants'
-// import { ref } from 'vue'
 import { usePayTime } from '@/hooks'
 export default {
   name: 'OrderItem',
@@ -101,6 +103,7 @@ export default {
   setup(props) {
     const { start, timeText } = usePayTime()
     start(props.order.countdown)
+
     return { orderStatus, timeText }
   },
 }

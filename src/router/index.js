@@ -28,14 +28,16 @@ const routes = [
       {
         path: '/member',
         component: MemberLayout,
-        children: [{ path: '/member', component: MemberHome }],
-      },
-      {
-        path: '/member/order',
-        component: { render: () => h(<RouterView />) },
         children: [
-          { path: '', component: MemberOrder },
-          { path: ':id', component: MemberOrderDetail },
+          { path: '/member', component: MemberHome },
+          {
+            path: '/member/order',
+            component: { render: () => h(<RouterView />) },
+            children: [
+              { path: '', component: MemberOrder },
+              { path: ':id', component: MemberOrderDetail },
+            ],
+          },
         ],
       },
     ],

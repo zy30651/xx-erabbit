@@ -1,15 +1,15 @@
 <template>
-  <div class="member-order-page">
-    <XtxTabs v-model="activeName" @click-tab="clickTab">
+  <div class="member-order">
+    <!-- tab组件 -->
+    <XtxTabs v-model="activeName" @tab-click="tabClick">
       <XtxTabsPanel
         v-for="item in orderStatus"
         :key="item.name"
         :label="item.label"
         :name="item.name"
-      >
-        {{ item.title }}
-      </XtxTabsPanel>
+      ></XtxTabsPanel>
     </XtxTabs>
+    <!-- 订单列表 -->
     <div class="order-list">
       <div v-if="loading" class="loading"></div>
       <div class="none" v-if="!loading && orderList.length === 0">暂无数据</div>
@@ -21,42 +21,42 @@
         v-for="item in orderList"
         :key="item.id"
         :order="item"
-      ></OrderItem>
+      />
     </div>
 
     <!-- 分页组件 -->
     <XtxPagination
-      v-if="total > requestParams.pageSize"
+      v-if="total > 0"
       :current-page="reqParams.page"
       :page-size="reqParams.pageSize"
       :total="total"
       @current-change="reqParams.page = $event"
     />
     <!-- 取消原因组件 -->
-    <!-- <OrderCancel ref="orderCancelCom" /> -->
+    <OrderCancel ref="orderCancelCom" />
     <!-- 查看物流组件 -->
-    <!-- <OrderLogistics ref="orderLogisticsCom" /> -->
+    <OrderLogistics ref="orderLogisticsCom" />
   </div>
 </template>
 <script>
-import OrderItem from './components/order-item.vue'
 import { reactive, ref, watch } from 'vue'
-import { confirmOrder, deleteOrder, findOrderList } from '@/api/order'
 import { orderStatus } from '@/api/constants'
+import OrderItem from './components/order-item'
 import OrderCancel from './components/order-cancel'
 import orderLogistics from './components/order-logistics.vue'
+import { confirmOrder, deleteOrder, findOrderList } from '@/api/order'
 import Confirm from '@/components/library/Confirm'
 import Message from '@/components/library/Message'
 export default {
   name: 'MemberOrder',
-  component: {
+  components: {
     OrderItem,
     OrderCancel,
     orderLogistics,
   },
   setup() {
     // 查询订单参数
-    const requestParams = reactive({
+    const reqParams = reactive({
       page: 1,
       pageSize: 5,
       orderState: 0,
@@ -69,14 +69,15 @@ export default {
 
     const getOrderList = () => {
       loading.value = true
-      findOrderList(requestParams).then((data) => {
+      findOrderList(reqParams).then((data) => {
         orderList.value = data.result.items
         total.value = data.result.counts
         loading.value = false
       })
     }
+    // 筛选条件变化重新加载
     watch(
-      requestParams,
+      reqParams,
       () => {
         getOrderList()
       },
@@ -85,10 +86,10 @@ export default {
 
     const activeName = ref('all')
 
-    const clickTab = (tab) => {
+    const clickTab = ({ index }) => {
       // 此时：tab.index 就是订单的状态
-      requestParams.orderState = tab.index
-      requestParams.page = 1
+      reqParams.orderState = index
+      reqParams.page = 1
     }
     // 删除订单
     const handlerDelete = (order) => {
@@ -102,26 +103,27 @@ export default {
         .catch(() => {})
     }
     return {
-      ...useCancelOrder(),
+      activeName,
+      orderStatus,
+      orderList,
+      clickTab,
+      loading,
+      total,
+      reqParams,
+      handlerDelete,
+      ...useCancel(),
       ...useConfirm(),
       ...useLogistics(),
-      activeName,
-      clickTab,
-      orderStatus,
-      requestParams,
-      orderList,
-      total,
-      loading,
-      handlerDelete,
     }
   },
 }
-// 封装逻辑-取消订单
-const useCancelOrder = () => {
+// 取消订单逻辑
+export const useCancel = () => {
+  // 组件实例
   const orderCancelCom = ref(null)
-  const handlerCancel = (item) => {
-    // item 就是你要取消的订单
-    orderCancelCom.value.open(item)
+  // 点击取消
+  const handlerCancel = (order) => {
+    orderCancelCom.value.open(order)
   }
   return { handlerCancel, orderCancelCom }
 }
@@ -150,11 +152,15 @@ export const useLogistics = () => {
 }
 </script>
 <style scoped lang="less">
+.member-order {
+  height: 100%;
+  background: #fff;
+}
 .order-list {
   background: #fff;
+  padding: 20px;
   position: relative;
   min-height: 400px;
-  padding: 20px;
 }
 .loading {
   height: 100%;

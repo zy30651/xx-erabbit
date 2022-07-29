@@ -6,11 +6,12 @@
         <XtxBreadItem to="/cart">购物车</XtxBreadItem>
         <XtxBreadItem>填写订单</XtxBreadItem>
       </XtxBread>
-      <div class="wrapper" v-if="checkoutInfo">
+      <div class="wrapper" v-if="order">
         <!-- 收货地址 -->
         <h3 class="box-title">收货地址</h3>
         <div class="box-body">
-          <CheckoutAddress :list="checkoutInfo.userAddresses" @change="changeAddress" />
+          <!-- 收货地址组件 -->
+          <CheckoutAddress @change="changeAddress" :list="order.userAddresses" />
         </div>
         <!-- 商品信息 -->
         <h3 class="box-title">商品信息</h3>
@@ -26,7 +27,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="item in checkoutInfo.goods" :key="item.id">
+              <tr v-for="item in order.goods" :key="item.skuId">
                 <td>
                   <a href="javascript:;" class="info">
                     <img :src="item.picture" alt="" />
@@ -36,7 +37,7 @@
                     </div>
                   </a>
                 </td>
-                <td>&yen;{{ item.payPrice }}</td>
+                <td>&yen;{{ item.price }}</td>
                 <td>{{ item.count }}</td>
                 <td>&yen;{{ item.totalPrice }}</td>
                 <td>&yen;{{ item.totalPayPrice }}</td>
@@ -64,11 +65,11 @@
           <div class="total">
             <dl>
               <dt>商品件数：</dt>
-              <dd>{{ checkoutInfo.summary.goodsCount }}件</dd>
+              <dd>{{ order.summary.goodsCount }}件</dd>
             </dl>
             <dl>
               <dt>商品总价：</dt>
-              <dd>¥{{ checkoutInfo.summary.totalPrice }}</dd>
+              <dd>¥{{ order.summary.totalPrice }}</dd>
             </dl>
             <dl>
               <dt>
@@ -76,59 +77,83 @@
                 <i></i>
                 费：
               </dt>
-              <dd>¥{{ checkoutInfo.summary.postFee }}</dd>
+              <dd>¥{{ order.summary.postFee }}</dd>
             </dl>
             <dl>
               <dt>应付总额：</dt>
-              <dd class="price">¥{{ checkoutInfo.summary.totalPayPrice }}</dd>
+              <dd class="price">¥{{ order.summary.totalPayPrice }}</dd>
             </dl>
           </div>
         </div>
         <!-- 提交订单 -->
         <div class="submit">
-          <XtxButton type="primary" @click="submitOrder">提交订单</XtxButton>
+          <XtxButton @click="submitOrderFn" type="primary">提交订单</XtxButton>
         </div>
       </div>
     </div>
   </div>
 </template>
-<script setup>
+<script>
 import CheckoutAddress from './components/checkout-address'
-import { findCheckoutInfo, createOrder } from '@/api/order'
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { createOrder, submitOrder, repurchaseOrder } from '@/api/order'
+import { reactive, ref } from 'vue'
 import Message from '@/components/library/Message'
-const checkoutInfo = ref(null)
-findCheckoutInfo().then((data) => {
-  checkoutInfo.value = data.result
-  // 设置提交时候的商品
-  requestParams.goods = checkoutInfo.value.goods.map((item) => {
-    return {
-      skuId: item.skuId,
-      count: item.count,
+import { useRouter, useRoute } from 'vue-router'
+export default {
+  name: 'XtxPayCheckoutPage',
+  components: { CheckoutAddress },
+  setup() {
+    // 结算功能-生成订单-订单信息
+    const order = ref(null)
+    const route = useRoute()
+    if (route.query.orderId) {
+      // 按照订单中商品结算
+      repurchaseOrder(route.query.orderId).then((data) => {
+        order.value = data.result
+        reqParams.goods = data.result.goods.map(({ skuId, count }) => ({ skuId, count }))
+      })
+    } else {
+      // 按照购物车商品结算
+      createOrder().then((data) => {
+        order.value = data.result
+        reqParams.goods = data.result.goods.map(({ skuId, count }) => ({ skuId, count }))
+      })
     }
-  })
-})
-// 需要提交的字段
-const requestParams = reactive({
-  addressId: null,
-  deliveryTimeType: 1,
-  payType: 1,
-  buyerMessage: '',
-  goods: [],
-})
-// 切换地址
-const changeAddress = (id) => {
-  requestParams.addressId = id
-}
 
-// 提交订单
-const router = useRouter()
-const submitOrder = () => {
-  if (!requestParams.addressId) return Message({ text: '请选择收货地址' })
-  createOrder(requestParams).then((data) => {
-    router.push({ path: '/member/pay', query: { id: data.result.id } })
-  })
+    // 接收收货地址ID
+    const changeAddress = (id) => {
+      reqParams.addressId = id
+    }
+
+    // 结算功能-提交订单-提交信息
+    const reqParams = reactive({
+      deliveryTimeType: 1,
+      payType: 1,
+      payChannel: 1,
+      buyerMessage: '',
+      // 商品信息，获取订单信息后设置
+      goods: [],
+      // 收货地址，切换收货地址或者组件默认的时候设置
+      addressId: null,
+    })
+
+    // 提交订单
+    const router = useRouter()
+    const submitOrderFn = () => {
+      // 检查收货地址是否选好
+      if (!reqParams.addressId) {
+        return Message({ text: '亲，请选择收货地址' })
+      }
+      submitOrder(reqParams).then((data) => {
+        // 提交订单成功
+        Message({ type: 'success', text: '提交订单成功' })
+        // 跳转支付页面
+        router.push(`/member/pay?orderId=${data.result.id}`)
+      })
+    }
+
+    return { order, changeAddress, reqParams, submitOrderFn }
+  },
 }
 </script>
 <style scoped lang="less">
@@ -145,59 +170,6 @@ const submitOrder = () => {
     }
     .box-body {
       padding: 20px 0;
-    }
-  }
-}
-.address {
-  border: 1px solid #f5f5f5;
-  display: flex;
-  align-items: center;
-  .text {
-    flex: 1;
-    min-height: 90px;
-    display: flex;
-    align-items: center;
-    .none {
-      line-height: 90px;
-      color: #999;
-      text-align: center;
-      width: 100%;
-    }
-    > ul {
-      flex: 1;
-      padding: 20px;
-      li {
-        line-height: 30px;
-        span {
-          color: #999;
-          margin-right: 5px;
-          > i {
-            width: 0.5em;
-            display: inline-block;
-          }
-        }
-      }
-    }
-    > a {
-      color: @xtxColor;
-      width: 160px;
-      text-align: center;
-      height: 90px;
-      line-height: 90px;
-      border-right: 1px solid #f5f5f5;
-    }
-  }
-  .action {
-    width: 420px;
-    text-align: center;
-    .btn {
-      width: 140px;
-      height: 46px;
-      line-height: 44px;
-      font-size: 14px;
-      &:first-child {
-        margin-right: 10px;
-      }
     }
   }
 }
